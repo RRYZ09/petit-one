@@ -393,6 +393,56 @@
     }
     .btn-ghost:hover { background: rgba(255,255,255,0.07); }
 
+    /* ── CHEER ── */
+    .cheer-section {
+      background: var(--bg-soft);
+      text-align: center;
+      padding: 4rem 1rem;
+    }
+    .cheer-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+      color: var(--text-sub);
+      margin-bottom: 1.2rem;
+      font-weight: 300;
+    }
+    .cheer-btn {
+      background: none;
+      border: 2px solid #f4a8b8;
+      border-radius: 50%;
+      width: 72px; height: 72px;
+      font-size: 2rem;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cheer-btn:hover { transform: scale(1.1); background: rgba(244,168,184,0.08); }
+    .cheer-btn:active { transform: scale(0.95); }
+    .cheer-count {
+      margin-top: 0.9rem;
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      letter-spacing: 0.05em;
+    }
+    .cheer-float {
+      position: fixed;
+      font-size: 1rem;
+      color: #f4a8b8;
+      font-family: 'Noto Serif JP', serif;
+      pointer-events: none;
+      animation: floatUp 1.6s ease-out forwards;
+      z-index: 9999;
+      white-space: nowrap;
+    }
+    @keyframes floatUp {
+      0%   { opacity: 1; transform: translateY(0) scale(1); }
+      60%  { opacity: 0.9; transform: translateY(-60px) scale(1.05); }
+      100% { opacity: 0; transform: translateY(-110px) scale(0.9); }
+    }
+
     /* ── FOOTER ── */
     footer {
       background: var(--hero-bg);
@@ -621,6 +671,12 @@
   </div>
 </section>
 
+<section class="cheer-section">
+  <p class="cheer-label">ぷちたちへの応援</p>
+  <button class="cheer-btn" id="cheerBtn" onclick="cheer(event)" aria-label="応援する">❤️</button>
+  <p class="cheer-count" id="cheerCount">…</p>
+</section>
+
 <footer>
   made with love by ありさん &amp; ぷちたち
   <br><br>
@@ -636,8 +692,41 @@
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
   }, { threshold: 0.12 });
-
   document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+
+  // 応援カウンター（counterapi.dev）
+  const CHEER_NS = "petit-one";
+  const CHEER_KEY = "cheer";
+
+  async function loadCheerCount() {
+    try {
+      const r = await fetch(`https://api.counterapi.dev/v1/${CHEER_NS}/${CHEER_KEY}`);
+      const d = await r.json();
+      document.getElementById("cheerCount").textContent = `${d.count.toLocaleString()} 回 応援してもらった`;
+    } catch { document.getElementById("cheerCount").textContent = ""; }
+  }
+
+  async function cheer(e) {
+    const btn = document.getElementById("cheerBtn");
+    btn.disabled = true;
+    // ほわわんアニメーション
+    const float = document.createElement("div");
+    float.className = "cheer-float";
+    float.textContent = "ありがとう ♡";
+    float.style.left = (e.clientX - 50) + "px";
+    float.style.top  = (e.clientY - 20) + "px";
+    document.body.appendChild(float);
+    float.addEventListener("animationend", () => float.remove());
+    // カウントアップ
+    try {
+      const r = await fetch(`https://api.counterapi.dev/v1/${CHEER_NS}/${CHEER_KEY}/up`);
+      const d = await r.json();
+      document.getElementById("cheerCount").textContent = `${d.count.toLocaleString()} 回 応援してもらった`;
+    } catch {}
+    setTimeout(() => { btn.disabled = false; }, 1200);
+  }
+
+  loadCheerCount();
 </script>
 </body>
 </html>
